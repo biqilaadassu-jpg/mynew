@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>አራዳ የደንብ ማስከበር | እለታዊ ሪፖርት</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--bg:#F5F1EB;--fg:#1C1C1C;--primary:#0B6E3D;--primary-dark:#074A2A;--primary-light:#E8F5EC;--accent:#C8962E;--accent-light:#FDF6E3;--card:#FFFFFF;--border:#D4CABC;--muted:#7A7267;--success:#27AE60;--danger:#C0392B;--warning:#E67E22;--info:#2980B9}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Noto Sans Ethiopic',sans-serif}
+body{background:var(--bg);color:var(--fg);min-height:100vh;overflow-x:hidden}
+.view{display:none;animation:fadeSlide .4s ease}.view.active{display:block}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bounceIn{0%{transform:scale(0);opacity:0}50%{transform:scale(1.15)}70%{transform:scale(.95)}100%{transform:scale(1);opacity:1}}
+@keyframes pulseGreen{0%,100%{box-shadow:0 0 0 0 rgba(39,174,96,.4)}50%{box-shadow:0 0 0 10px rgba(39,174,96,0)}}
+@keyframes shakeX{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes countUp{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+.bounce-in{animation:bounceIn .6s ease forwards}
+.pulse-green{animation:pulseGreen 2s infinite}
+.shake{animation:shakeX .5s ease}
+.spin{animation:spin 1s linear infinite}
+.count-up{animation:countUp .4s ease}
+.woreda-card{transition:all .3s ease;cursor:pointer;position:relative;overflow:hidden}
+.woreda-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--primary);transform:scaleX(0);transition:transform .3s ease;transform-origin:left}
+.woreda-card:hover::before{transform:scaleX(1)}
+.woreda-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.status-card{transition:all .3s ease;border-radius:14px;padding:18px}
+.status-card.reported{border-left:5px solid var(--success);background:linear-gradient(135deg,#f0fdf4,#dcfce7)}
+.status-card.not-reported{border-left:5px solid var(--danger);background:linear-gradient(135deg,#fef2f2,#fecaca)}
+.status-card .icon-wrap{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px}
+.status-card.reported .icon-wrap{background:var(--success);color:#fff}
+.status-card.not-reported .icon-wrap{background:var(--danger);color:#fff}
+.tab-btn{transition:all .2s ease;border-bottom:3px solid transparent;padding:10px 16px;cursor:pointer;font-weight:600;white-space:nowrap;font-size:13px}
+.tab-btn:hover{background:var(--primary-light)}
+.tab-btn.active{border-bottom-color:var(--accent);color:var(--primary-dark);background:var(--primary-light)}
+.tab-content{display:none;animation:fadeSlide .3s ease}.tab-content.active{display:block}
+.input-cell{width:100%;padding:7px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:right;transition:border-color .2s;background:#fff;font-family:'Noto Sans Ethiopic',sans-serif}
+.input-cell:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(11,110,61,.12)}
+.computed{background:#eef4ef!important;color:var(--primary-dark);font-weight:700;cursor:default}
+.entry-table{width:100%;border-collapse:separate;border-spacing:0}
+.entry-table th{background:var(--primary);color:#fff;padding:9px 7px;font-size:12px;font-weight:600;text-align:center}
+.entry-table th:first-child{border-radius:0 8px 8px 0;text-align:right}
+.entry-table th:last-child{border-radius:8px 0 0 8px}
+.entry-table td{padding:7px;border-bottom:1px solid #e8e2d8;vertical-align:middle}
+.entry-table tr:nth-child(even) td{background:#faf8f4}
+.entry-table .section-header td{background:linear-gradient(90deg,var(--primary-light),#f5f0e8);font-weight:700;color:var(--primary-dark);padding:10px 10px;font-size:13px}
+.btn{padding:10px 22px;border-radius:8px;font-weight:600;cursor:pointer;border:none;transition:all .2s ease;font-family:'Noto Sans Ethiopic',sans-serif;font-size:14px;display:inline-flex;align-items:center;gap:8px}
+.btn:active{transform:scale(.96)}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-dark)}
+.btn-accent{background:var(--accent);color:#fff}.btn-accent:hover{background:#b8860b}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#a93226}
+.btn-outline{background:transparent;border:2px solid var(--primary);color:var(--primary)}.btn-outline:hover{background:var(--primary);color:#fff}
+.btn-sm{padding:6px 14px;font-size:12px}
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:14px 20px;border-radius:10px;color:#fff;font-weight:500;animation:slideDown .3s ease;box-shadow:0 6px 20px rgba(0,0,0,.2);display:flex;align-items:center;gap:10px;max-width:380px}
+.toast.success{background:var(--success)}.toast.error{background:var(--danger)}.toast.info{background:var(--info)}.toast.warning{background:var(--warning)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9000;display:flex;align-items:center;justify-content:center;animation:fadeSlide .2s ease}
+.modal-box{background:#fff;border-radius:16px;padding:28px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.bg-pattern{background-image:radial-gradient(circle at 20% 80%,rgba(11,110,61,.04) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(200,150,46,.05) 0%,transparent 50%)}
+.login-bg{background:linear-gradient(135deg,#074A2A 0%,#0B6E3D 40%,#C8962E 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.login-bg::before{content:'';position:absolute;width:400px;height:400px;background:rgba(255,255,255,.05);border-radius:50%;top:-100px;right:-100px}
+.login-bg::after{content:'';position:absolute;width:300px;height:300px;background:rgba(255,255,255,.03);border-radius:50%;bottom:-80px;left:-80px}
+.pw-input{width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:10px;font-size:16px;text-align:center;letter-spacing:4px;font-family:monospace;transition:border-color .2s}
+.pw-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px rgba(11,110,61,.15)}
+
+/* ===== ሪፖርት ቅጽ ቅርጽ ===== */
+.rpt-wrap{background:#fff;border:1px solid #c9c0b0;border-radius:4px;padding:28px 30px;box-shadow:0 2px 16px rgba(0,0,0,.08);margin-bottom:30px}
+.rpt-logo{width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid var(--primary);display:block;margin:0 auto}
+.rpt-org{font-size:17px;font-weight:800;color:var(--primary-dark);text-align:center;margin:10px 0 2px;letter-spacing:.3px}
+.rpt-dept{font-size:15px;font-weight:700;color:var(--primary);text-align:center;margin-bottom:2px}
+.rpt-title-main{font-size:14px;font-weight:600;text-align:center;color:#444;margin-bottom:2px}
+.rpt-date-line{text-align:center;font-size:12px;color:var(--muted);margin-bottom:14px;padding-bottom:12px;border-bottom:2.5px solid var(--primary)}
+.rpt-woreda-header{background:linear-gradient(135deg,var(--primary),#15804d);color:#fff;padding:10px 16px;border-radius:8px;font-size:15px;font-weight:800;margin:20px 0 14px;display:flex;align-items:center;justify-content:space-between}
+.rpt-woreda-header .w-time{font-size:11px;font-weight:400;opacity:.8}
+.rpt-section-title{font-size:13px;font-weight:800;color:var(--primary-dark);margin:18px 0 8px;padding:6px 12px;background:var(--primary-light);border-left:4px solid var(--primary);border-radius:0 6px 6px 0;display:flex;align-items:center;gap:8px}
+.rpt-tbl{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:10px}
+.rpt-tbl th{background:var(--primary);color:#fff;padding:7px 8px;font-weight:600;text-align:center;font-size:11px;border:1px solid #065a30}
+.rpt-tbl td{padding:6px 8px;border:1px solid #d0c8b8;text-align:right;font-size:11.5px}
+.rpt-tbl td.lbl{text-align:right;font-weight:500;white-space:normal;max-width:300px}
+.rpt-tbl td.lbl-sub{text-align:right;font-weight:400;padding-right:18px;font-size:11px;color:#555}
+.rpt-tbl tr:nth-child(even) td{background:#faf8f3}
+.rpt-tbl tr.row-total td{background:#e0f0e4;font-weight:700;border-top:2px solid var(--primary)}
+.rpt-tbl tr.row-grand td{background:#c8e6c9;font-weight:800;font-size:12.5px;border-top:2.5px solid var(--primary-dark);border-bottom:2.5px solid var(--primary-dark)}
+.rpt-tbl tr.row-section td{background:#f0ebe2;font-weight:700;color:var(--primary-dark);font-size:12px}
+.rpt-sig-area{display:flex;justify-content:space-between;margin-top:50px;padding:0 20px}
+.rpt-sig-box{text-align:center;width:200px}
+.rpt-sig-box .sig-line{border-top:2px solid #333;margin-top:55px;padding-top:6px;font-size:12px;font-weight:600}
+.rpt-footer{text-align:center;font-size:10px;color:#aaa;margin-top:20px;padding-top:10px;border-top:1px solid #e0d8cc}
+.rpt-combined-summary{background:linear-gradient(135deg,#f8f5f0,#f0ebe2);border:2px solid var(--primary);border-radius:10px;padding:16px 20px;margin:20px 0}
+.rpt-combined-summary h4{font-size:14px;font-weight:800;color:var(--primary-dark);margin-bottom:12px;text-align:center}
+.rpt-combined-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.rpt-combined-item{background:#fff;border-radius:8px;padding:10px 14px;border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.rpt-combined-item .ci-label{font-size:12px;font-weight:600;color:var(--fg)}
+.rpt-combined-item .ci-val{font-size:16px;font-weight:900;color:var(--primary)}
+.rpt-del-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-family:'Noto Sans Ethiopic',sans-serif;transition:all .2s}
+.rpt-del-btn:hover{background:var(--danger);border-color:var(--danger)}
+.no-print{}
+
+@media print{
+  body *{visibility:hidden}
+  #reportContent,#reportContent *{visibility:visible}
+  #reportContent{position:absolute;left:0;top:0;width:100%;padding:5mm}
+  .no-print{display:none!important}
+  .rpt-wrap{box-shadow:none;border:none;padding:10px 15px}
+  .rpt-tbl{font-size:9.5px}
+  .rpt-tbl th,.rpt-tbl td{padding:3px 5px}
+  .rpt-woreda-header{padding:6px 12px;font-size:13px}
+  .rpt-section-title{font-size:11px;margin:12px 0 6px}
+  @page{size:A4;margin:6mm}
+}
+</style>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ========== የመግቢያ እይታ ========== -->
+<div id="loginView" class="view active">
+<div class="login-bg">
+<div style="position:relative;z-index:1;width:95%;max-width:720px">
+  <div style="text-align:center;margin-bottom:24px">
+    <img src="https://www.aacea.gov.et/uploads/Setting/-2024-06-13-666ab75fb1956.jpg" alt="ሎጎ" style="width:90px;height:90px;border-radius:50%;border:4px solid rgba(255,255,255,.6);box-shadow:0 4px 20px rgba(0,0,0,.3);object-fit:cover">
+    <h1 style="color:#fff;font-size:21px;font-weight:800;margin-top:10px;line-height:1.5">በአራዳ ክፍለ ከተማ አስተዳደር</h1>
+    <h2 style="color:rgba(255,255,255,.9);font-size:15px;font-weight:600">የደንብ ማስከበር ጽ/ቤት</h2>
+    <p style="color:rgba(255,255,255,.7);font-size:12px;margin-top:6px">እለታዊ የፋይናንስ፣ የቁጥጥር እና የግንዛቤ ስራዎች ሪፖርት</p>
+  </div>
+  <div style="background:rgba(255,255,255,.97);border-radius:20px;padding:26px;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <p style="text-align:center;font-weight:700;font-size:14px;color:var(--primary-dark);margin-bottom:16px"><i class="fas fa-lock" style="margin-right:6px"></i>እባክዎን ወረዳ ይምረጡ</p>
+    <div id="woredaGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px"></div>
+    <div id="adminCard"></div>
+  </div>
+  <div id="pwModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9500;align-items:center;justify-content:center">
+    <div class="modal-box" style="max-width:360px;text-align:center">
+      <div style="width:56px;height:56px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;margin:0 auto 14px"><i class="fas fa-key" style="font-size:22px;color:var(--primary)"></i></div>
+      <h3 id="pwTitle" style="font-size:15px;font-weight:700;margin-bottom:4px"></h3>
+      <p id="pwSub" style="font-size:12px;color:var(--muted);margin-bottom:16px"></p>
+      <input type="password" id="pwInput" class="pw-input" placeholder="****" autocomplete="off">
+      <p id="pwError" style="color:var(--danger);font-size:12px;margin-top:8px;display:none"><i class="fas fa-exclamation-circle"></i> የሚስጥር ቃል የተሳሳተ ነው!</p>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn btn-outline" style="flex:1" onclick="closePwModal()"><i class="fas fa-times"></i> ሰርዝ</button>
+        <button class="btn btn-primary" style="flex:1" onclick="submitPw()"><i class="fas fa-sign-in-alt"></i> ግባ</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ========== ዳሽቦርድ ========== -->
+<div id="dashboardView" class="view">
+<div class="bg-pattern" style="min-height:100vh">
+  <header style="background:var(--primary);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,.15);position:sticky;top:0;z-index:100">
+    <div style="display:flex;align-items:center;gap:12px">
+      <img src="https://www.aacea.gov.et/uploads/Setting/-2024-06-13-666ab75fb1956.jpg" alt="" style="width:42px;height:42px;border-radius:50%;border:2px solid rgba(255,255,255,.5);object-fit:cover">
+      <div><div style="color:#fff;font-weight:700;font-size:14px">የደንብ ማስከበር ጽ/ቤት - አራዳ</div><div style="color:rgba(255,255,255,.7);font-size:10px">እለታዊ የፋይናንስ፣ የቁጥጥር እና የግንዛቤ ስራዎች ሪፖርት</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span id="dashDate" style="color:rgba(255,255,255,.8);font-size:11px"></span>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)" onclick="logout()"><i class="fas fa-sign-out-alt"></i> ውጣ</button>
+    </div>
+  </header>
+  <div style="max-width:1100px;margin:0 auto;padding:22px">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px" id="dashStats"></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:26px" id="dashCards"></div>
+    <div style="text-align:center"><button class="btn btn-primary" style="font-size:15px;padding:13px 34px" onclick="showAllReports()"><i class="fas fa-file-alt"></i> ሁሉንም ሪፖርት ይመልከቱ</button></div>
+  </div>
+</div>
+</div>
+
+<!-- ========== የመዝገብ እይታ ========== -->
+<div id="entryView" class="view">
+<div class="bg-pattern" style="min-height:100vh">
+  <header style="background:var(--primary);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,.15);position:sticky;top:0;z-index:100">
+    <div style="display:flex;align-items:center;gap:12px">
+      <img src="https://www.aacea.gov.et/uploads/Setting/-2024-06-13-666ab75fb1956.jpg" alt="" style="width:42px;height:42px;border-radius:50%;border:2px solid rgba(255,255,255,.5);object-fit:cover">
+      <div><div id="entryTitle" style="color:#fff;font-weight:700;font-size:14px"></div><div style="color:rgba(255,255,255,.7);font-size:10px">እለታዊ ሪፖርት ማስገቢያ</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)" onclick="showEntryReport()"><i class="fas fa-eye"></i> ሪፖርት</button>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)" onclick="logout()"><i class="fas fa-sign-out-alt"></i> ውጣ</button>
+    </div>
+  </header>
+  <div style="max-width:1000px;margin:0 auto;padding:18px">
+    <div style="background:var(--card);border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1px solid var(--border)">
+      <label style="font-weight:600;white-space:nowrap;font-size:13px"><i class="fas fa-calendar-alt" style="color:var(--primary);margin-right:6px"></i>ቀን:</label>
+      <input type="date" id="entryDate" class="input-cell" style="max-width:190px;text-align:left" onchange="loadExistingReport()">
+    </div>
+    <div style="background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1px solid var(--border)">
+      <div style="display:flex;overflow-x:auto;border-bottom:2px solid var(--border)" id="tabBar"></div>
+      <div id="tabContents" style="padding:18px;max-height:65vh;overflow-y:auto"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn btn-primary" style="font-size:14px;padding:11px 28px" onclick="saveReport()"><i class="fas fa-save"></i> አስቀምጥ</button>
+      <button class="btn btn-accent" onclick="showEntryReport()"><i class="fas fa-print"></i> ሪፖርት ይመልከቱ</button>
+      <button id="deleteEntryBtn" class="btn btn-danger" style="display:none" onclick="confirmDelete(currentWoreda)"><i class="fas fa-trash"></i> ሰርዝ</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ========== የሪፖርት እይታ ========== -->
+<div id="reportView" class="view">
+<div class="bg-pattern" style="min-height:100vh">
+  <header class="no-print" style="background:var(--primary);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,.15);position:sticky;top:0;z-index:100">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)" onclick="goBack()"><i class="fas fa-arrow-left"></i> ተመለስ</button>
+      <span id="reportHeaderTitle" style="color:#fff;font-weight:700;font-size:14px"></span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)" onclick="window.print()"><i class="fas fa-print"></i> አትም</button>
+      <button class="btn btn-sm" style="background:var(--accent);color:#fff" onclick="generatePDF()"><i class="fas fa-file-pdf"></i> PDF አውርድ</button>
+    </div>
+  </header>
+  <div style="max-width:960px;margin:0 auto;padding:20px" id="reportContent"></div>
+</div>
+</div>
+
+<div id="confirmModal" style="display:none" class="modal-overlay">
+<div class="modal-box" style="text-align:center">
+  <div style="width:56px;height:56px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;margin:0 auto 14px"><i class="fas fa-exclamation-triangle" style="font-size:24px;color:var(--danger)"></i></div>
+  <h3 id="confirmTitle" style="font-size:15px;font-weight:700;margin-bottom:6px"></h3>
+  <p id="confirmMsg" style="font-size:12px;color:var(--muted);margin-bottom:18px"></p>
+  <div style="display:flex;gap:10px">
+    <button class="btn btn-outline" style="flex:1" onclick="closeConfirm()">ሰርዝ</button>
+    <button id="confirmOkBtn" class="btn btn-danger" style="flex:1">አረጋግጥ</button>
+  </div>
+</div>
+</div>
+
+<div id="loadingModal" style="display:none" class="modal-overlay">
+<div class="modal-box" style="text-align:center">
+  <div class="spin" style="width:44px;height:44px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;margin:0 auto 14px"></div>
+  <p id="loadingMsg" style="font-weight:600;font-size:14px"></p>
+</div>
+</div>
+
+<script>
+/* ================================================ */
+const WOREDAS=[
+  {id:'1',name:'ወረዳ 01',pw:'A0118',color:'#0B6E3D'},
+  {id:'2',name:'ወረዳ 02',pw:'B0218',color:'#1B7A4A'},
+  {id:'4',name:'ወረዳ 04',pw:'C0418',color:'#2E8B57'},
+  {id:'5',name:'ወረዳ 05',pw:'D0518',color:'#3A9D6A'},
+  {id:'6',name:'ወረዳ 06',pw:'E0618',color:'#C8962E'},
+  {id:'7',name:'ወረዳ 07',pw:'F07F18',color:'#B8860B'},
+  {id:'8',name:'ወረዳ 08',pw:'G0818',color:'#D4A843'},
+  {id:'9',name:'ወረዳ 09',pw:'H0918',color:'#8B7355'}
+];
+const ADMIN_PW='S1018';
+const STORAGE_KEY='arada_reports_v2';
+let currentWoreda=null,isAdmin=false,pendingWoreda=null,pendingIsAdmin=false,confirmCallback=null;
+
+const T3_CATS=['በቤት ለቤት እና በቡና ጠጡ የተሰጠ ግንዛቤ','በት/ት ቤት የተሰጠ ግንዛቤ','በብሎክ አደረጃጀት የተሰጠ ግንዛቤ','በመድረክ እና በንቅናቄ የተሰጠ ግንዛቤ','በሞንታርቦ የተሰጠ ግንዛቤ','በብሮሸር/በበራሪ ወረቀት የተሰጠ ግንዛቤ'];
+const T4_CATS=[
+  {name:'ህገ-ወጥ መሬት ወረራ',subs:[]},
+  {name:'ህገ-ወጥ መሬት ማስፋፋት',subs:[]},
+  {name:'ህገ-ወጥ ግንባታ',subs:['ህገ-ወጥ አጥር','ህገ-ወጥ ቤት','ህገ-ወጥ ሸራ ቤት']},
+  {name:'ህገ-ወጥ የጎዳና እና የበረንዳ ንግድ',subs:['ህገ-ወጥ ጎዳና ንግድ','ህገ-ወጥ በረንዳ ንግድ']},
+  {name:'ህገ-ወጥ ደረቅ እና ፍሳሽ ቆሻሻ',subs:[]},
+  {name:'ህገ-ወጥ እንስሳት እርድ እና ዝዉዉር',subs:[]},
+  {name:'ህገ-ወጥ መንገድ አጠቃቀም',subs:[]},
+  {name:'ህገ-ወጥ ማስታወቂያ',subs:[]},
+  {name:'አዋኪ ድርጊት',subs:['ሺሻ ቤት','ጫት መቃም','ጫት ማስቃም','መጠጥ ቤት','ቁማር ቤት','ህገ-ወጥ ማሳጅ ቤት']}
+];
+
+/* ===== ውሂብ ===== */
+function getReports(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[]}catch(e){return[]}}
+function saveReportsData(d){localStorage.setItem(STORAGE_KEY,JSON.stringify(d))}
+function getWoredaReport(wid,date){return getReports().find(r=>r.woreda===wid&&r.date===date)}
+function getTodayReports(){return getReports().filter(r=>r.date===todayStr())}
+function getRecentReports(){const n=Date.now();return getReports().filter(r=>n-r.timestamp<86400000)}
+function deleteWoredaReport(wid,date){saveReportsData(getReports().filter(r=>!(r.woreda===wid&&r.date===date)))}
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function fmtNum(v){return(v||0).toLocaleString('am-ET')}
+
+/* ===== ቶስት ===== */
+function toast(msg,type='info'){
+  const c=document.getElementById('toastContainer');
+  const icons={success:'fa-check-circle',error:'fa-times-circle',info:'fa-info-circle',warning:'fa-exclamation-circle'};
+  const t=document.createElement('div');t.className='toast '+type;
+  t.innerHTML=`<i class="fas ${icons[type]}"></i><span>${msg}</span>`;
+  c.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100px)';t.style.transition='all .3s';setTimeout(()=>t.remove(),300)},3500);
+}
+function showConfirm(title,msg,cb){document.getElementById('confirmTitle').textContent=title;document.getElementById('confirmMsg').textContent=msg;document.getElementById('confirmModal').style.display='flex';confirmCallback=cb;document.getElementById('confirmOkBtn').onclick=()=>{closeConfirm();if(confirmCallback)confirmCallback()}}
+function closeConfirm(){document.getElementById('confirmModal').style.display='none';confirmCallback=null}
+function showLoading(msg){document.getElementById('loadingMsg').textContent=msg;document.getElementById('loadingModal').style.display='flex'}
+function hideLoading(){document.getElementById('loadingModal').style.display='none'}
+
+/* ===== መግቢያ ===== */
+function initLogin(){
+  document.getElementById('woredaGrid').innerHTML=WOREDAS.map((w,i)=>`
+    <div class="woreda-card" style="background:var(--card);border-radius:12px;padding:16px 10px;text-align:center;border:2px solid var(--border);animation:fadeSlide .4s ease ${i*60}ms both" onclick="openPwModal('${w.id}','${w.name}','${w.pw}',false)">
+      <div style="width:38px;height:38px;border-radius:50%;background:${w.color};color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-weight:800;font-size:13px">${w.id}</div>
+      <div style="font-weight:700;font-size:12px">${w.name}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">ሪፖርት ማስገቢያ</div>
+    </div>`).join('');
+  document.getElementById('adminCard').innerHTML=`
+    <div class="woreda-card" style="background:linear-gradient(135deg,var(--accent),#b8860b);border-radius:12px;padding:14px;text-align:center;color:#fff;cursor:pointer;border:none" onclick="openPwModal('admin','ሁሉንም ሪፖርት መመልከት','${ADMIN_PW}',true)">
+      <i class="fas fa-chart-bar" style="font-size:18px;margin-bottom:4px;display:block"></i>
+      <div style="font-weight:700;font-size:12px">ሁሉንም ሪፖርት ይመልከቱ</div>
+      <div style="font-size:10px;opacity:.8;margin-top:2px">ዳሽቦርድ እና የተቀላቀለ ሪፖርት</div>
+    </div>`;
+}
+function openPwModal(id,name,pw,isAdm){pendingWoreda=id;pendingIsAdmin=isAdm;document.getElementById('pwTitle').textContent=name;document.getElementById('pwSub').textContent='እባክዎን የሚስጥር ቃል ያስገቡ';document.getElementById('pwInput').value='';document.getElementById('pwError').style.display='none';const m=document.getElementById('pwModal');m.style.display='flex';setTimeout(()=>document.getElementById('pwInput').focus(),100)}
+function closePwModal(){document.getElementById('pwModal').style.display='none';pendingWoreda=null;pendingIsAdmin=false}
+function submitPw(){
+  const val=document.getElementById('pwInput').value.trim();
+  const expected=pendingIsAdmin?ADMIN_PW:(WOREDAS.find(w=>w.id===pendingWoreda)||{}).pw;
+  if(val===expected){closePwModal();if(pendingIsAdmin){isAdmin=true;showDashboard()}else{isAdmin=false;currentWoreda=pendingWoreda;showEntry()}}
+  else{document.getElementById('pwError').style.display='block';document.getElementById('pwInput').classList.add('shake');setTimeout(()=>document.getElementById('pwInput').classList.remove('shake'),500)}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('pwModal').style.display==='flex')submitPw()});
+
+/* ===== ዳሽቦርድ ===== */
+function showDashboard(){
+  switchView('dashboardView');
+  document.getElementById('dashDate').textContent=new Date().toLocaleDateString('am-ET',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const today=getTodayReports(),rIds=new Set(today.map(r=>r.woreda)),rc=rIds.size,nrc=WOREDAS.length-rc;
+  document.getElementById('dashStats').innerHTML=`
+    <div style="background:var(--card);border-radius:14px;padding:18px;border:1px solid var(--border);text-align:center;animation:fadeSlide .4s ease .1s both"><div style="font-size:34px;font-weight:900;color:var(--success)" class="count-up">${rc}</div><div style="font-size:12px;color:var(--muted);margin-top:3px">ሪፖርት የተላከ</div></div>
+    <div style="background:var(--card);border-radius:14px;padding:18px;border:1px solid var(--border);text-align:center;animation:fadeSlide .4s ease .2s both"><div style="font-size:34px;font-weight:900;color:var(--danger)" class="count-up">${nrc}</div><div style="font-size:12px;color:var(--muted);margin-top:3px">ሪፖርት ያልተላከ</div></div>
+    <div style="background:var(--card);border-radius:14px;padding:18px;border:1px solid var(--border);text-align:center;animation:fadeSlide .4s ease .3s both"><div style="font-size:34px;font-weight:900;color:var(--primary)" class="count-up">${WOREDAS.length}</div><div style="font-size:12px;color:var(--muted);margin-top:3px">ጠቅላላ ወረዳ</div></div>`;
+  document.getElementById('dashCards').innerHTML=WOREDAS.map((w,i)=>{
+    const rep=rIds.has(w.id),rpt=today.find(r=>r.woreda===w.id),ts=rpt?new Date(rpt.timestamp).toLocaleTimeString('am-ET',{hour:'2-digit',minute:'2-digit'}):'';
+    return `<div class="status-card ${rep?'reported pulse-green':'not-reported'}" style="animation:fadeSlide .5s ease ${i*80}ms both">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="icon-wrap bounce-in" style="animation-delay:${i*80+300}ms"><i class="fas ${rep?'fa-check':'fa-times'}"></i></div>
+        <div style="flex:1"><div style="font-weight:700;font-size:13px">${w.name}</div><div style="font-size:11px;color:${rep?'var(--success)':'var(--danger)'};margin-top:2px">${rep?'ሪፖርት ተላእኳል - '+ts:'ሪፖርት ያልተላከ'}</div></div>
+        ${isAdmin&&rpt?`<button class="btn btn-sm btn-danger" style="padding:4px 10px;font-size:10px" onclick="event.stopPropagation();confirmDelete('${w.id}')"><i class="fas fa-trash"></i></button>`:''}
+      </div>
+    </div>`}).join('');
+}
+
+/* ===== መዝገብ ማስገቢያ ===== */
+function showEntry(){
+  switchView('entryView');
+  const w=WOREDAS.find(x=>x.id===currentWoreda);
+  document.getElementById('entryTitle').textContent=w.name+' - ሪፖርት ማስገቢያ';
+  document.getElementById('entryDate').value=todayStr();
+  buildTabs();loadExistingReport();
+}
+function buildTabs(){
+  const tabs=[{id:'tab1',label:'ሰንጠረዥ 1',icon:'fa-gavel'},{id:'tab2',label:'ሰንጠረዥ 2',icon:'fa-users'},{id:'tab3',label:'ሰንጠረዥ 3',icon:'fa-bullhorn'},{id:'tab4',label:'ሰንጠረዥ 4',icon:'fa-clipboard-check'}];
+  document.getElementById('tabBar').innerHTML=tabs.map((t,i)=>`<div class="tab-btn ${i===0?'active':''}" onclick="switchTab('${t.id}',this)"><i class="fas ${t.icon}" style="margin-right:5px"></i>${t.label}</div>`).join('');
+  document.getElementById('tabContents').innerHTML=`<div class="tab-content active" id="tab1">${buildTable1()}</div><div class="tab-content" id="tab2">${buildTable2()}</div><div class="tab-content" id="tab3">${buildTable3()}</div><div class="tab-content" id="tab4">${buildTable4()}</div>`;
+  document.querySelectorAll('#tab1 .input-cell').forEach(i=>i.addEventListener('input',calcTable1));
+  document.querySelectorAll('#tab2 .input-cell').forEach(i=>i.addEventListener('input',calcTable2));
+  document.querySelectorAll('#tab3 .input-cell').forEach(i=>i.addEventListener('input',calcTable3));
+  document.querySelectorAll('#tab4 .input-cell').forEach(i=>i.addEventListener('input',calcTable4));
+}
+function switchTab(id,el){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));el.classList.add('active');document.getElementById(id).classList.add('active')}
+
+/* ---- T1 ---- */
+function buildTable1(){return `<table class="entry-table"><thead><tr><th style="width:42%">ዝርዝር</th><th style="width:19.3%">በ150</th><th style="width:19.3%">በ167</th><th style="width:19.3%">በ180</th></tr></thead><tbody>
+<tr class="section-header"><td colspan="4">ከጨረታ ሽያጭ የተገኘ ገንዘብ</td></tr>
+<tr><td class="label-cell" style="padding-left:20px">ድምር ገንዘብ</td><td colspan="3"><input class="input-cell" id="t1_auction" type="number" min="0" value="0"></td></tr>
+<tr class="section-header"><td colspan="4">የተጣለ ቅጣት መጠን</td></tr>
+<tr><td class="label-cell" style="padding-left:20px">ቅጣት</td><td><input class="input-cell" id="t1_p150" type="number" min="0" value="0"></td><td><input class="input-cell" id="t1_p167" type="number" min="0" value="0"></td><td><input class="input-cell" id="t1_p180" type="number" min="0" value="0"></td></tr>
+<tr><td class="label-cell" style="padding-left:20px;font-weight:700">ድምር ቅጣት</td><td colspan="3"><input class="input-cell computed" id="t1_psum" readonly></td></tr>
+<tr class="section-header"><td colspan="4">ጠቅላላ የተሰበሰበ ገንዘብ</td></tr>
+<tr><td class="label-cell" style="padding-left:20px;font-weight:700;color:var(--primary-dark)">ጠቅላላ ድምር</td><td colspan="3"><input class="input-cell computed" id="t1_total" readonly style="background:#d4edda"></td></tr>
+<tr class="section-header"><td colspan="4">ፋይናንስ ገቢ ያልተደረገ ገንዘብ</td></tr>
+<tr><td class="label-cell" style="padding-left:20px">ያልተደረገ</td><td><input class="input-cell" id="t1_f150" type="number" min="0" value="0"></td><td><input class="input-cell" id="t1_f167" type="number" min="0" value="0"></td><td><input class="input-cell" id="t1_f180" type="number" min="0" value="0"></td></tr>
+<tr><td class="label-cell" style="padding-left:20px;font-weight:700">ድምር ያልተደረገ</td><td colspan="3"><input class="input-cell computed" id="t1_fsum" readonly></td></tr>
+<tr class="section-header" style="background:#c8e6c9"><td colspan="4">ወደ ፋይናንስ ገቢ የተደረገ ገንዘብ</td></tr>
+<tr><td class="label-cell" style="padding-left:20px;font-weight:800;color:var(--primary-dark);font-size:14px">ወደ ፋይናንስ የተደረገ</td><td colspan="3"><input class="input-cell computed" id="t1_finance" readonly style="background:#a8dab5;font-size:14px"></td></tr>
+</tbody></table>`}
+function calcTable1(){const v=id=>parseFloat(document.getElementById(id).value)||0;const ps=v('t1_p150')+v('t1_p167')+v('t1_p180'),t=v('t1_auction')+ps,fs=v('t1_f150')+v('t1_f167')+v('t1_f180'),f=t-fs;document.getElementById('t1_psum').value=ps||'';document.getElementById('t1_total').value=t||'';document.getElementById('t1_fsum').value=fs||'';document.getElementById('t1_finance').value=f||''}
+
+/* ---- T2 ---- */
+function buildTable2(){return `<table class="entry-table"><thead><tr><th style="width:28%">ዓይነት</th><th style="width:18%">በ150</th><th style="width:18%">በ167</th><th style="width:18%">በ180</th><th style="width:18%">ድምር</th></tr></thead><tbody>
+<tr class="section-header"><td colspan="5">ድርጅት ብዛት</td></tr>
+<tr><td class="label-cell" style="padding-left:20px">ድርጅት</td><td><input class="input-cell" id="t2_org150" type="number" min="0" value="0"></td><td><input class="input-cell" id="t2_org167" type="number" min="0" value="0"></td><td><input class="input-cell" id="t2_org180" type="number" min="0" value="0"></td><td><input class="input-cell computed" id="t2_orgsum" readonly></td></tr>
+<tr class="section-header"><td colspan="5">ግለሰብ ብዛት</td></tr>
+<tr><td class="label-cell" style="padding-left:20px">ግለሰብ</td><td><input class="input-cell" id="t2_ind150" type="number" min="0" value="0"></td><td><input class="input-cell" id="t2_ind167" type="number" min="0" value="0"></td><td><input class="input-cell" id="t2_ind180" type="number" min="0" value="0"></td><td><input class="input-cell computed" id="t2_indsum" readonly></td></tr>
+<tr style="background:#c8e6c9"><td class="label-cell" style="font-weight:800;color:var(--primary-dark)">ጠቅላላ ድምር</td><td colspan="3"></td><td><input class="input-cell computed" id="t2_grand" readonly style="background:#a8dab5;font-size:14px"></td></tr>
+</tbody></table>`}
+function calcTable2(){const v=id=>parseFloat(document.getElementById(id).value)||0;const o=v('t2_org150')+v('t2_org167')+v('t2_org180'),i=v('t2_ind150')+v('t2_ind167')+v('t2_ind180');document.getElementById('t2_orgsum').value=o||'';document.getElementById('t2_indsum').value=i||'';document.getElementById('t2_grand').value=(o+i)||''}
+
+/* ---- T3 ---- */
+function buildTable3(){let rows=T3_CATS.map((c,i)=>`<tr class="section-header"><td colspan="4">${i+1}. ${c}</td></tr><tr><td class="label-cell" style="padding-left:20px">ሴ</td><td><input class="input-cell" id="t3_${i}_m" type="number" min="0" value="0"></td><td></td><td></td></tr><tr><td class="label-cell" style="padding-left:20px">ወ</td><td><input class="input-cell" id="t3_${i}_f" type="number" min="0" value="0"></td><td></td><td><input class="input-cell computed" id="t3_${i}_sum" readonly></td></tr>`).join('');return `<table class="entry-table"><thead><tr><th style="width:38%">ዝርዝር</th><th style="width:20%">ሴ</th><th style="width:20%">ወ</th><th style="width:22%">ድምር</th></tr></thead><tbody>${rows}<tr style="background:#c8e6c9"><td class="label-cell" style="font-weight:800;color:var(--primary-dark)">ጠቅላላ ድምር</td><td colspan="2"></td><td><input class="input-cell computed" id="t3_grand" readonly style="background:#a8dab5;font-size:14px"></td></tr></tbody></table>`}
+function calcTable3(){let g=0;T3_CATS.forEach((_,i)=>{const m=parseFloat(document.getElementById(`t3_${i}_m`).value)||0,f=parseFloat(document.getElementById(`t3_${i}_f`).value)||0,s=m+f;g+=s;document.getElementById(`t3_${i}_sum`).value=s||''});document.getElementById('t3_grand').value=g||''}
+
+/* ---- T4 ---- */
+function buildTable4(){let rows=T4_CATS.map((c,ci)=>{let h=`<tr class="section-header"><td colspan="2">${ci+1}. ${c.name}</td></tr>`;if(c.subs.length>0){c.subs.forEach((s,si)=>{h+=`<tr><td class="label-cell" style="padding-left:28px;font-size:12px">${s}</td><td><input class="input-cell" id="t4_${ci}_${si}" type="number" min="0" value="0"></td></tr>`});h+=`<tr><td class="label-cell" style="padding-left:18px;font-weight:700">ድምር</td><td><input class="input-cell computed" id="t4_${ci}_sum" readonly></td></tr>`}else{h+=`<tr><td class="label-cell" style="padding-left:18px">ብዛት</td><td><input class="input-cell" id="t4_${ci}_0" type="number" min="0" value="0"></td></tr>`}return h}).join('');return `<table class="entry-table"><thead><tr><th style="width:62%">ዝርዝር</th><th style="width:38%">ብዛት</th></tr></thead><tbody>${rows}<tr style="background:#c8e6c9"><td class="label-cell" style="font-weight:800;color:var(--primary-dark)">ጠቅላላ ድምር</td><td><input class="input-cell computed" id="t4_grand" readonly style="background:#a8dab5;font-size:14px"></td></tr></tbody></table>`}
+function calcTable4(){let g=0;T4_CATS.forEach((c,ci)=>{if(c.subs.length>0){let s=0;c.subs.forEach((_,si)=>{s+=(parseFloat(document.getElementById(`t4_${ci}_${si}`).value)||0)});document.getElementById(`t4_${ci}_sum`).value=s||'';g+=s}else{g+=(parseFloat(document.getElementById(`t4_${ci}_0`).value)||0)}});document.getElementById('t4_grand').value=g||''}
+
+/* ===== ማስቀመጥ / መጫን ===== */
+function collectData(){const v=id=>{const el=document.getElementById(id);return el?parseFloat(el.value)||0:0};return{table1:{auction:v('t1_auction'),p150:v('t1_p150'),p167:v('t1_p167'),p180:v('t1_p180'),psum:v('t1_psum'),total:v('t1_total'),f150:v('t1_f150'),f167:v('t1_f167'),f180:v('t1_f180'),fsum:v('t1_fsum'),finance:v('t1_finance')},table2:{org150:v('t2_org150'),org167:v('t2_org167'),org180:v('t2_org180'),orgsum:v('t2_orgsum'),ind150:v('t2_ind150'),ind167:v('t2_ind167'),ind180:v('t2_ind180'),indsum:v('t2_indsum'),grand:v('t2_grand')},table3:{cats:T3_CATS.map((_,i)=>({m:v(`t3_${i}_m`),f:v(`t3_${i}_f`),sum:v(`t3_${i}_sum`)})),grand:v('t3_grand')},table4:{cats:T4_CATS.map((c,ci)=>{if(c.subs.length>0)return{subs:c.subs.map((_,si)=>v(`t4_${ci}_${si}`)),sum:v(`t4_${ci}_sum`)};return{subs:[v(`t4_${ci}_0`)],sum:v(`t4_${ci}_0`)}}),grand:v('t4_grand')}}}
+function saveReport(){const date=document.getElementById('entryDate').value;if(!date){toast('እባክዎን ቀን ይምረጡ','warning');return}const data=collectData();let reports=getReports();const idx=reports.findIndex(r=>r.woreda===currentWoreda&&r.date===date);const obj={id:currentWoreda+'_'+date,woreda:currentWoreda,date:date,timestamp:Date.now(),...data};if(idx>=0)reports[idx]=obj;else reports.push(obj);saveReportsData(reports);document.getElementById('deleteEntryBtn').style.display='inline-flex';toast('ሪፖርት በተሳካ ሁኔታ ተቀምጧል!','success')}
+function loadExistingReport(){const date=document.getElementById('entryDate').value;if(!date)return;const rpt=getWoredaReport(currentWoreda,date);document.getElementById('deleteEntryBtn').style.display=rpt?'inline-flex':'none';if(!rpt)return;const s=id=>{const el=document.getElementById(id);if(el)el.value=rpt.table1[id]||0};['auction','p150','p167','p180','f150','f167','f180'].forEach(s);const s2=id=>{const el=document.getElementById(id);if(el)el.value=rpt.table2[id]||0};['org150','org167','org180','ind150','ind167','ind180'].forEach(s2);rpt.table3.cats.forEach((c,i)=>{const em=document.getElementById(`t3_${i}_m`),ef=document.getElementById(`t3_${i}_f`);if(em)em.value=c.m||0;if(ef)ef.value=c.f||0});rpt.table4.cats.forEach((c,ci)=>{T4_CATS[ci].subs.forEach((_,si)=>{const el=document.getElementById(`t4_${ci}_${si}`);if(el)el.value=(c.subs&&c.subs[si])||0})});calcTable1();calcTable2();calcTable3();calcTable4()}
+function confirmDelete(wid){const w=WOREDAS.find(x=>x.id===wid);showConfirm('ሪፖርት መሰረዝ',`${w.name} ሪፖርት መሰረዝ ይፈልጋሉ?`,()=>{deleteWoredaReport(wid,document.getElementById('entryDate')?document.getElementById('entryDate').value:todayStr());toast('ሪፖርት ተሰርዟል','success');if(isAdmin)showDashboard();else{document.getElementById('deleteEntryBtn').style.display='none';document.querySelectorAll('.input-cell:not(.computed)').forEach(el=>{if(el.type==='number')el.value='0'});document.querySelectorAll('.computed').forEach(el=>el.value='')}})}
+function clearForm(){document.querySelectorAll('.input-cell:not(.computed)').forEach(el=>{if(el.type==='number')el.value='0'});document.querySelectorAll('.computed').forEach(el=>el.value='')}
+
+/* =================================================================
+   የሪፖርት ቅጽ - የተዘመነ ቅርጽ
+   ================================================================= */
+function showEntryReport(){const date=document.getElementById('entryDate').value||todayStr();const rpt=getWoredaReport(currentWoreda,date);if(!rpt){toast('ሪፖርት አልተገኘም! እባክዎን በመጀመሪያ ያስቀምጡ','warning');return}const w=WOREDAS.find(x=>x.id===currentWoreda);renderReport([{...rpt,wname:w.name}],`የ${w.name} እለታዊ ሪፖርት`,date,false)}
+function showAllReports(){const recent=getRecentReports();if(recent.length===0){toast('የበስተው 24 ሰዓት ውስጥ ምንም ሪፖርት የለም','warning');return}const enriched=recent.map(r=>{const w=WOREDAS.find(x=>x.id===r.woreda);return{...r,wname:w?w.name:'ወረዳ '+r.woreda}});enriched.sort((a,b)=>parseInt(a.woreda)-parseInt(b.woreda));renderReport(enriched,'የተቀላቀለ እለታዊ ሪፖርት','',true)}
+function renderReport(reports,title,date,showDel){
+  switchView('reportView');
+  document.getElementById('reportHeaderTitle').textContent=title;
+  const isCombined=reports.length>1;
+  const printDate=new Date().toLocaleDateString('am-ET',{year:'numeric',month:'long',day:'numeric'});
+
+  /* ራስጌ */
+  let html=`<div class="rpt-wrap">
+    <img src="https://www.aacea.gov.et/uploads/Setting/-2024-06-13-666ab75fb1956.jpg" class="rpt-logo" alt="ሎጎ">
+    <div class="rpt-org">በአራዳ ክፍለ ከተማ አስተዳደር</div>
+    <div class="rpt-dept">የደንብ ማስከበር ጽ/ቤት</div>
+    <div class="rpt-title-main">እለታዊ የፋይናንስ፣ የቁጥጥር እና የግንዛቤ ስራዎች ሪፖርት</div>
+    <div class="rpt-date-line">${isCombined?'የበስተው 24 ሰዓት የተቀላቀለ ሪፖርት':'ቀን: '+date} &nbsp;|&nbsp; የተዘጋጀ: ${printDate}</div>`;
+
+  /* የተቀላቀለ ማጠቃለያ */
+  if(isCombined){
+    let sumT1={auction:0,psum:0,total:0,fsum:0,finance:0};
+    let sumT2={orgsum:0,indsum:0,grand:0};
+    let sumT3=0,sumT4=0;
+    reports.forEach(r=>{
+      sumT1.auction+=r.table1.auction||0;sumT1.psum+=r.table1.psum||0;sumT1.total+=r.table1.total||0;sumT1.fsum+=r.table1.fsum||0;sumT1.finance+=r.table1.finance||0;
+      sumT2.orgsum+=r.table2.orgsum||0;sumT2.indsum+=r.table2.indsum||0;sumT2.grand+=r.table2.grand||0;
+      sumT3+=r.table3.grand||0;sumT4+=r.table4.grand||0;
+    });
+    html+=`<div class="rpt-combined-summary"><h4><i class="fas fa-chart-pie" style="margin-right:6px"></i>የወረዳዎች ጠቅላላ ማጠቃለያ</h4>
+    <div class="rpt-combined-grid">
+      <div class="rpt-combined-item"><span class="ci-label">የተሰበሰበ ገንዘብ</span><span class="ci-val">${fmtNum(sumT1.total)}</span></div>
+      <div class="rpt-combined-item"><span class="ci-label">ወደ ፋይናንስ የተደረገ</span><span class="ci-val">${fmtNum(sumT1.finance)}</span></div>
+      <div class="rpt-combined-item"><span class="ci-label">ደንብ የተላለፉ</span><span class="ci-val">${fmtNum(sumT2.grand)}</span></div>
+      <div class="rpt-combined-item"><span class="ci-label">የግንዛቤ ጠቅላላ</span><span class="ci-val">${fmtNum(sumT3)}</span></div>
+      <div class="rpt-combined-item"><span class="ci-label">የቁጥጥር ጠቅላላ</span><span class="ci-val">${fmtNum(sumT4)}</span></div>
+      <div class="rpt-combined-item"><span class="ci-label">የሪፖርት ወረዳ</span><span class="ci-val">${reports.length} / ${WOREDAS.length}</span></div>
+    </div></div>`;
+  }
+
+  /* እያንዳንዱ ወረዳ */
+  reports.forEach((rpt,ri)=>{
+    html+=`<div class="rpt-woreda-header">
+      <span><i class="fas fa-building" style="margin-right:8px;opacity:.7"></i>${rpt.wname}</span>
+      <span style="display:flex;align-items:center;gap:12px">
+        <span class="w-time">ቀን: ${rpt.date} &bull; ${new Date(rpt.timestamp).toLocaleTimeString('am-ET',{hour:'2-digit',minute:'2-digit'})}</span>
+        ${showDel?`<button class="rpt-del-btn no-print" onclick="confirmDelete('${rpt.woreda}')"><i class="fas fa-trash" style="margin-right:4px"></i>ሰርዝ</button>`:''}
+      </span>
+    </div>`;
+
+    /* ሰንጠረዥ 1 */
+    const d=rpt.table1;
+    html+=`<div class="rpt-section-title"><i class="fas fa-gavel"></i> ሰንጠረዥ 1: ሕግ እና መመሪያዉን ተከትሎ የተሰበሰበ ገንዘብ</div>
+    <table class="rpt-tbl">
+      <tr><th style="width:36%">ዝርዝር</th><th>በ150</th><th>በ167</th><th>በ180</th><th>ድምር</th></tr>
+      <tr class="row-section"><td class="lbl">ከጨረታ ሽያጭ የተገኘ ገንዘብ</td><td colspan="3"></td><td style="font-weight:600">${fmtNum(d.auction)}</td></tr>
+      <tr><td class="lbl">የተጣለ ቅጣት መጠን</td><td>${fmtNum(d.p150)}</td><td>${fmtNum(d.p167)}</td><td>${fmtNum(d.p180)}</td><td style="font-weight:600">${fmtNum(d.psum)}</td></tr>
+      <tr class="row-total"><td class="lbl">ጠቅላላ የተሰበሰበ ገንዘብ</td><td colspan="3"></td><td>${fmtNum(d.total)}</td></tr>
+      <tr><td class="lbl">ፋይናንስ ገቢ ያልተደረገ</td><td>${fmtNum(d.f150)}</td><td>${fmtNum(d.f167)}</td><td>${fmtNum(d.f180)}</td><td style="font-weight:600">${fmtNum(d.fsum)}</td></tr>
+      <tr class="row-grand"><td class="lbl">ወደ ፋይንስ ገቢ የተደረገ ገንዘብ</td><td colspan="3"></td><td>${fmtNum(d.finance)}</td></tr>
+    </table>`;
+
+    /* ሰንጠረዥ 2 */
+    const e=rpt.table2;
+    html+=`<div class="rpt-section-title"><i class="fas fa-users"></i> ሰንጠረዥ 2: ደንብ የተላለፉ ግለሰቦች እና ድርጅቶች</div>
+    <table class="rpt-tbl">
+      <tr><th style="width:30%">ዓይነት</th><th>በ150</th><th>በ167</th><th>በ180</th><th>ድምር</th></tr>
+      <tr class="row-section"><td class="lbl">ድርጅት ብዛት</td><td>${fmtNum(e.org150)}</td><td>${fmtNum(e.org167)}</td><td>${fmtNum(e.org180)}</td><td style="font-weight:600">${fmtNum(e.orgsum)}</td></tr>
+      <tr class="row-section"><td class="lbl">ግለሰብ ብዛት</td><td>${fmtNum(e.ind150)}</td><td>${fmtNum(e.ind167)}</td><td>${fmtNum(e.ind180)}</td><td style="font-weight:600">${fmtNum(e.indsum)}</td></tr>
+      <tr class="row-grand"><td class="lbl">ጠቅላላ ድምር (ግለሰብ + ድርጅት)</td><td colspan="3"></td><td>${fmtNum(e.grand)}</td></tr>
+    </table>`;
+
+    /* ሰንጠረዥ 3 */
+    html+=`<div class="rpt-section-title"><i class="fas fa-bullhorn"></i> ሰንጠረዥ 3: ከግንዛቤ እና ከቅድመ መከላከል ስራ አንፃር</div>
+    <table class="rpt-tbl">
+      <tr><th style="width:46%">ዝርዝር</th><th>ሴ</th><th>ወ</th><th>ድምር</th></tr>`;
+    rpt.table3.cats.forEach((c,i)=>{
+      html+=`<tr class="row-section"><td class="lbl">${i+1}. ${T3_CATS[i]}</td><td>${fmtNum(c.m)}</td><td>${fmtNum(c.f)}</td><td style="font-weight:600">${fmtNum(c.sum)}</td></tr>`;
+    });
+    html+=`<tr class="row-grand"><td class="lbl">ጠቅላላ ድምር</td><td colspan="2"></td><td>${fmtNum(rpt.table3.grand)}</td></tr></table>`;
+
+    /* ሰንጠረዥ 4 */
+    html+=`<div class="rpt-section-title"><i class="fas fa-clipboard-check"></i> ሰንጠረዥ 4: ከክትትል፣ ቁጥጥርና እርምጃ አወሳሰድ ስራ ጋር በተያያዘ</div>
+    <table class="rpt-tbl"><tr><th style="width:68%">ዝርዝር</th><th>ብዛት</th></tr>`;
+    T4_CATS.forEach((cat,ci)=>{
+      const c=rpt.table4.cats[ci];
+      if(cat.subs.length>0){
+        html+=`<tr class="row-section"><td class="lbl">${ci+1}. ${cat.name}</td><td></td></tr>`;
+        cat.subs.forEach((sub,si)=>{
+          html+=`<tr><td class="lbl-sub">${sub}</td><td>${fmtNum(c.subs[si])}</td></tr>`;
+        });
+        html+=`<tr><td class="lbl" style="padding-right:18px;font-weight:600">ድምር</td><td style="font-weight:600">${fmtNum(c.sum)}</td></tr>`;
+      }else{
+        html+=`<tr class="row-section"><td class="lbl">${ci+1}. ${cat.name}</td><td style="font-weight:600">${fmtNum(c.subs[0])}</td></tr>`;
+      }
+    });
+    html+=`<tr class="row-grand"><td class="lbl">ጠቅላላ ድምር</td><td>${fmtNum(rpt.table4.grand)}</td></tr></table>`;
+
+    /* ወረዳ መለያየት */
+    if(ri<reports.length-1)html+=`<div style="border-bottom:2px dashed var(--border);margin:24px 0 0"></div>`;
+  });
+
+  /* ፊርማ ስፌት */
+  html+=`<div class="rpt-sig-area no-print">
+    <div class="rpt-sig-box"><div class="sig-line">የደንብ ማስከበር ጽ/ቤት ሀላፊ</div></div>
+    <div class="rpt-sig-box"><div class="sig-line">የክፍለ ከተማ አስተዳደር ሀላፊ</div></div>
+  </div>`;
+
+  /* ጽሁፍ አታሚ ፊርማ */
+  html+=`<div class="rpt-sig-area" style="margin-top:10px">
+    <div class="rpt-sig-box"><div class="sig-line">የደንብ ማስከበር ጽ/ቤት ሀላፊ</div></div>
+    <div class="rpt-sig-box"><div class="sig-line">የክፍለ ከተማ አስተዳደር ሀላፊ</div></div>
+  </div>`;
+
+  html+=`<div class="rpt-footer">ይህ ሪፖርት በኮምፒውተር ተዘጋጅቷል &bull; አራዳ ክፍለ ከተማ የደንብ ማስከበር ጽ/ቤት &bull; ${printDate}</div>`;
+  html+=`</div>`; /* የ rpt-wrap መዝጊያ */
+
+  document.getElementById('reportContent').innerHTML=html;
+}
+
+/* ===== PDF ===== */
+async function generatePDF(){
+  showLoading('PDF በማዘጋጀት ላይ...');
+  try{
+    const el=document.getElementById('reportContent');
+    const canvas=await html2canvas(el,{scale:2,useCORS:true,logging:false,backgroundColor:'#fff',windowWidth:960});
+    const imgData=canvas.toDataURL('image/jpeg',0.92);
+    const{jsPDF}=window.jspdf;
+    const pdf=new jsPDF('p','mm','a4');
+    const pW=pdf.internal.pageSize.getWidth(),pH=pdf.internal.pageSize.getHeight(),mg=6,uW=pW-mg*2;
+    const imgH=(canvas.height*uW)/canvas.width;
+    let hLeft=imgH,pos=mg,pg=0;
+    while(hLeft>0){if(pg>0)pdf.addPage();pdf.addImage(imgData,'JPEG',mg,pos,uW,imgH);hLeft-=pH-mg*2;pos-=pH-mg*2;pg++}
+    pdf.save(`Arada_Report_${todayStr()}.pdf`);
+    hideLoading();toast('PDF በተሳካ ሁኔታ ተዘጋጅቷል!','success');
+  }catch(e){hideLoading();toast('PDF ፍጠሪ አልተሳካም: '+e.message,'error')}
+}
+
+/* ===== አጠቃላይ ===== */
+function switchView(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
+function goBack(){if(isAdmin)showDashboard();else switchView('entryView')}
+function logout(){currentWoreda=null;isAdmin=false;switchView('loginView')}
+function autoCleanup(){const r=getReports(),n=Date.now(),f=r.filter(x=>n-x.timestamp<86400000);if(f.length!==r.length)saveReportsData(f)}
+
+document.addEventListener('DOMContentLoaded',()=>{initLogin();autoCleanup();const d=document.getElementById('entryDate');if(d)d.value=todayStr()});
+</script>
+</body>
+</html>
